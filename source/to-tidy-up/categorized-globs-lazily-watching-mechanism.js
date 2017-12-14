@@ -35,7 +35,7 @@ function LazyWatcher(actionToTake, options) {
 
 	let somethingChangedAfterLastActionStart = false;
 	let actionIsOnGoing = false;
-	let lastActionTakenTimestamp = new Date().getTime();
+	// let lastActionTakenTimestamp = new Date().getTime();
 	let currentIntervalId = NaN;
 
 	this.stopWatching = stopWatching;
@@ -74,7 +74,7 @@ function LazyWatcher(actionToTake, options) {
 		}
 	}
 
-	function onActionFinishedOnce(errorCode) {
+	function onActionFinishedOnce(/* info */) {
 		// console.log('>>>', chalk.gray(`Categorized watcher\'s action done. That was told by the ${chalk.bgRed.black(' callback ')}.`));
 		actionIsOnGoing = false;
 	}
@@ -108,10 +108,10 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 
 	const knownCategoriesId = Object.keys(categorizedGlobsToWatch);
 
-	const catagorizedWatchers = {}
+	const catagorizedWatchers = {};
 	knownCategoriesId.forEach((categoryId) => {
 		const category = categorizedGlobsToWatch[categoryId];
-		const actionToTake = category.actionToTake;
+		const { actionToTake } = category;
 		const rawGlobsOfThisCategory = category.globsToWatch;
 
 		const globsOfThisCategory = rawGlobsOfThisCategory.map(glob => glob.replace(/\\/g, '/'));
@@ -151,6 +151,7 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 	function printBeatifulLogForOneChange(timeStamp, typeOfTheChange, involvedFilePath, categoryId) {
 		let loggingKeyColor;
 		let loggingKeyBgColor;
+		/* eslint-disable indent */
 		switch (typeOfTheChange) {
 			case 'changed':
 				loggingKeyColor = 'blue';
@@ -177,6 +178,7 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 				loggingKeyBgColor = 'bgWhite';
 				break;
 		}
+		/* eslint-enable indent */
 
 		console.log(`\n>>> ${
 			chalk.gray(timeStamp)

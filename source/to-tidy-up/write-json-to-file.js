@@ -10,27 +10,26 @@ module.exports = (outputFilePath, JSONToWrite, options) => {
 		shouldWriteInJSONFormat = false,
 		constNameIfWriteJSFormat,
 		shouldNotLog = false,
-		eslintConfigStringIfWriteJSFormat = '/* eslint-disable */'
+		eslintConfigStringIfWriteJSFormat = '/* eslint-disable */',
 	} = options;
 
 	const {
-		name: outputFileName,
-		dir: resolvedOutputFolder,
+		name: outputFileNameWithoutExt,
+		dir: outputFileFolder,
 	} = pathTool.parse(outputFilePath);
 
-	const fileExt = shouldWriteInJSONFormat ? 'json' : 'js';
-
 	const reliableOutputFilePath = pathTool.format({
-		dir,
-		name,
-		ext: fileExt,
+		dir: outputFileFolder,
+		name: outputFileNameWithoutExt,
+		ext: shouldWriteInJSONFormat ? 'json' : 'js',
 	});
 
-	let fileContents;
 	const {
 		formattedJSONString,
 		objectLiteralString,
 	} = formatJSON(JSONToWrite);
+
+	let fileContents;
 
 	if (shouldWriteInJSONFormat) {
 		fileContents = `${formattedJSONString}\n`;

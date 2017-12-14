@@ -1,0 +1,56 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "ecmaFeatures": {
+            "experimentalObjectRestSpread": true,
+            "jsx": true
+        },
+        "sourceType": "module"
+    },
+    "plugins": [
+        "react"
+    ],
+    "rules": {
+        "indent":[ "error", "tab", {
+            "SwitchCase": 1
+            , "MemberExpression": 1
+        }]
+        , "no-trailing-spaces": [ "error", {
+            "skipBlankLines": false
+            , "ignoreComments": false
+        }]
+        , "linebreak-style":[ "error", "unix" ]
+        , "quotes":[ "error", "single" ]
+        , "semi":[ "error", "always" ]
+        , "max-statements": [ "warn", 32 ]
+        , "multiline-ternary": ["error", "always-multiline" ]
+        , "yoda": [ "error", "never" ]
+        , "new-parens": [ 0 ]
+        , "comma-dangle": [ "error", "always-multiline" ]
+        , "no-return-assign": "error"
+        , "no-new-func": "error"
+        , "no-eval": "error"
+        , "no-implied-eval": "error"
+        , "prefer-const": "error"
+        , "prefer-destructuring": [ "error",
+            {
+                "VariableDeclarator": {
+                    "array": true
+                    , "object": true
+                },
+                "AssignmentExpression": {
+                    "array": true
+                    , "object": true
+                }
+            },
+            {
+                "enforceForRenamedProperties": false
+            }
+        ]
+    }
+}

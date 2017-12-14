@@ -47,8 +47,8 @@ module.exports = (json, options = {}) => {
 
 			// 将双引号改为单引号
 			.replace(/"(\w+)": /g, '$1: ')
-			.replace(/ "([^\n]*)[^\\]?": /g, " '$1': ")
-			.replace(/ "([^\n]*)[^\\]?"(,?\n)/g, " '$1'$2")
+			.replace(/ "([^\n]*)[^\\]?": /g, " '$1': ") // eslint-disable-line quotes
+			.replace(/ "([^\n]*)[^\\]?"(,?\n)/g, " '$1'$2") // eslint-disable-line quotes
 
 			// 去除正则表达式内部的转义反斜杠
 			.replace(/([^/])\\\\/g, '$1\\')

@@ -1,0 +1,33 @@
+# ----- sundries -----
+*.diff
+*.bak
+.svn/
+
+
+
+# ----- system helpers -----
+Thumbs.db
+.DS_Store
+
+
+
+# ----- temp files & logs -----
+npm-debug.log
+*.log
+*.log.*
+
+
+
+# ----- external dependencies -----
+node_modules/
+
+
+
+# ----- personal configurations -----
+# /.vscode/
+# yarn.lock
+
+
+
+# ----- build outputs -----
+# none

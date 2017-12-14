@@ -1,9 +1,9 @@
 /* eslint indent: [ 2, 'tab' ], no-tabs: 0, */
 
 /**
- * 
+ *
  * @param {?object} options
- * 
+ *
  * @example
  * 	const loopingEmojis = new LoopingChars({
  *		showcaseStringLength: 19,

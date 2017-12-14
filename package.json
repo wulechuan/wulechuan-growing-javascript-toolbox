@@ -1,0 +1,24 @@
+{
+  "name": "wulechuan-growing-javascript-toolbox",
+  "version": "1.0.0",
+  "license": "WTFPL",
+  "author": "吴乐川 <wulechuan@live.com>",
+  "description": "吴乐川的Javascript杂乱片段。wulechuan's sundries to tidy up later.",
+  "main": "null",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wulechuan/wulechuan-growing-javascript-toolbox.git"
+  },
+  "keywords": [
+    "javascript"
+  ],
+  "bugs": {
+    "url": "https://github.com/wulechuan/wulechuan-growing-javascript-toolbox/issues"
+  },
+  "homepage": "https://github.com/wulechuan/wulechuan-growing-javascript-toolbox#readme",
+  "devDependencies": {
+    "eslint": "^4.13.1",
+    "eslint-plugin-react": "^7.5.1"
+  }
+}
