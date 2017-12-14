@@ -202,7 +202,7 @@ gulp.task('clean: all built files', [
 	'distribution: delete old distribution',
 	'clean: files that are commonly shared among tasks',
 ], (thisTaskDone) => {
-	printInfoAboutTheCompletionOfTask('Clean All built Files');
+	printInfoAboutTheCompletionOfTask('Clean All Built Files');
 	thisTaskDone();
 });
 
