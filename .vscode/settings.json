@@ -1,21 +1,10 @@
 {
     "editor.trimAutoWhitespace": true
 
-    // , "eslint.enable": true
-    // , "eslint.run": "onType"
-    // , "eslint.validate": [
-    //     "javascript",
-    //     "javascriptreact"
-    // ]
-
-    , "tslint.enable": false
-    , "tslint.run": "onType"
-    , "files.exclude": {
-        "**/.git": true
-        , "**/.svn": true
-        , "**/.hg": true
-        , "**/CVS": true
-        , "**/.DS_Store": true
-        , "node_modules": true
-    }
+    , "eslint.enable": true
+    , "eslint.run": "onType"
+    , "eslint.validate": [
+        "javascript"
+        // , "javascriptreact"
+    ]
 }
