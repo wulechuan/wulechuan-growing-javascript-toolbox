@@ -15,6 +15,15 @@ const defaultIntervalInMilliSeconds = 600;
 
 module.exports = categorizedGlobsLazilyWatchingMechanism;
 
+
+
+
+
+
+
+
+
+
 function LazyWatcher(actionToTake, options) {
 	if (typeof actionToTake !== 'function') {
 		throw new TypeError('actionToTake must be a function');
@@ -54,7 +63,7 @@ function LazyWatcher(actionToTake, options) {
 		console.log('');
 		const returnedValue = actionToTake(onActionFinishedOnce);
 
-		if (returnedValue === 'finished') {
+		if (returnedValue === 'watching action finished') {
 			actionIsOnGoing = false;
 			// console.log('>>>', chalk.gray(`Categorized watcher\'s action done. That was told by the ${chalk.bgRed.black(' return value ')}.`));
 		} else if (isAPromiseObject(returnedValue)) {
@@ -84,6 +93,10 @@ function LazyWatcher(actionToTake, options) {
 	})();
 }
 
+
+
+
+
 function setupWatchers(categorizedGlobsToWatch, options = {}) {
 	const { basePath = process.cwd() } = options;
 	let { aggregatedSourceGlobsToWatch } = options;
@@ -94,7 +107,7 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 	}
 
 	const knownCategoriesId = Object.keys(categorizedGlobsToWatch);
-	
+
 	const catagorizedWatchers = {}
 	knownCategoriesId.forEach((categoryId) => {
 		const category = categorizedGlobsToWatch[categoryId];
@@ -116,7 +129,26 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 		}
 	});
 
-	function printBeatifulLogForAChange(timeStamp, typeOfTheChange, involvedFilePath, categoryId) {
+	gaze(aggregatedSourceGlobsToWatch, (error, thisGazer) => {
+		thisGazer.on('all', onSingleFileInvolved);
+
+		// 不论是直接侦听all事件，还是分别侦听以下四种事件，都无法避免将rename误判为两个不同事件。
+		// 多数情况下是误判为文件先被deleted再被renamed；偶尔会出现先deleted后added。
+		// 因此，干脆仍然采用侦听all事件。
+
+		// 	thisGazer.on('added', (involvedFilePath) => { onSingleFileInvolved('added', involvedFilePath); });
+		// 	thisGazer.on('renamed', (involvedFilePath) => { onSingleFileInvolved('renamed', involvedFilePath); });
+		// 	thisGazer.on('changed', (involvedFilePath) => { onSingleFileInvolved('changed', involvedFilePath); });
+		// 	thisGazer.on('deleted', (involvedFilePath) => { onSingleFileInvolved('deleted', involvedFilePath); });
+	});
+
+
+
+
+
+
+
+	function printBeatifulLogForOneChange(timeStamp, typeOfTheChange, involvedFilePath, categoryId) {
 		let loggingKeyColor;
 		let loggingKeyBgColor;
 		switch (typeOfTheChange) {
@@ -184,22 +216,9 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 		});
 
 		involvedCategoriesId.forEach((involvedCategoryId) => {
-			printBeatifulLogForAChange(timeStamp, typeOfTheChange, involvedFilePath, involvedCategoryId);
+			printBeatifulLogForOneChange(timeStamp, typeOfTheChange, involvedFilePath, involvedCategoryId);
 			const involvedWatcher = catagorizedWatchers[involvedCategoryId];
 			involvedWatcher.rememberAChange();
 		});
 	}
-
-	gaze(aggregatedSourceGlobsToWatch, (error, thisGazer) => {
-		thisGazer.on('all', onSingleFileInvolved);
-
-		// 不论是直接侦听all事件，还是分别侦听以下四种事件，都无法避免将rename误判为两个不同事件。
-		// 多数情况下是误判为文件先被deleted再被renamed；偶尔会出现先deleted后added。
-		// 因此，干脆仍然采用侦听all事件。
-
-		// 	thisGazer.on('added', (involvedFilePath) => { onSingleFileInvolved('added', involvedFilePath); });
-		// 	thisGazer.on('renamed', (involvedFilePath) => { onSingleFileInvolved('renamed', involvedFilePath); });
-		// 	thisGazer.on('changed', (involvedFilePath) => { onSingleFileInvolved('changed', involvedFilePath); });
-		// 	thisGazer.on('deleted', (involvedFilePath) => { onSingleFileInvolved('deleted', involvedFilePath); });
-	});
 }

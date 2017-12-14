@@ -1,0 +1,14 @@
+{
+    "editor.trimAutoWhitespace": true
+
+    // , "eslint.enable": true
+    // , "eslint.run": "onType"
+    // , "eslint.validate": [
+    //     "javascript",
+    //     "javascriptreact"
+    // ]
+
+    , "tslint.enable": true
+    , "tslint.jsEnable": true
+    , "tslint.run": "onType"
+}

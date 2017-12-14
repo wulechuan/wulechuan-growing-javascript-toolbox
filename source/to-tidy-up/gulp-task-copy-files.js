@@ -5,7 +5,7 @@ const renameFiles = require('gulp-rename');
 const pump = require('pump');
 const chalk = require('chalk');
 
-module.exports = function createTaskForCopyingFiles(sourceGlobs, outputPath, options) {
+module.exports = function createGulpTaskForCopyingFiles(sourceGlobs, outputPath, options) {
 	const {
 		shouldFlattenSubFolders = false,
 		logPrefix = 'Unspeficied task',
@@ -17,7 +17,7 @@ module.exports = function createTaskForCopyingFiles(sourceGlobs, outputPath, opt
 		chalk.magenta(descriptionOfAssetsToCopy) :
 		'files';
 
-	return function taskBody(thisTaskDone) {
+	return function gulpTaskBody(thisTaskDone) {
 		if (!shouldNotLogDetails) {
 			console.log(`\n>>> ${
 				logPrefix

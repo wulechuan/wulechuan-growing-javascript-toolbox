@@ -1,6 +1,26 @@
 /* eslint indent: [ 2, 'tab' ], no-tabs: 0, */
 
 module.exports = (json, options = {}) => {
+	const {
+		shouldSkipGeneratingObjectLiteral = false, // to speed up the process if we only need an JSON.
+	} = options;
+
+	const formattedJSONString = JSON
+		.stringify(json, JSONStringifyReplacer, 4);
+
+	const objectLiteralString = shouldSkipGeneratingObjectLiteral ?
+		formattedJSONString :
+		somethingForFormattingObjectLiteralThatMustHappenAfterStringify(formattedJSONString);
+
+	return {
+		formattedJSONString,
+		objectLiteralString,
+	};
+
+
+
+
+
 	function JSONStringifyReplacer(k, v) {
 		if (v instanceof RegExp) {
 			return v.toString();
@@ -19,9 +39,10 @@ module.exports = (json, options = {}) => {
 		return v;
 	}
 
+
 	function somethingForFormattingObjectLiteralThatMustHappenAfterStringify(formattedJSONString) {
 		const objectLiteralString = formattedJSONString
-			// 将【正则表达式】的外扩【引号】去除
+			// 将【正则表达式】的外括【引号】去除
 			.replace(/ ["']\/([^*\n][^\n]*)\/([gi]?)["']/g, ' /$1/$2')
 
 			// 将双引号改为单引号
@@ -37,21 +58,4 @@ module.exports = (json, options = {}) => {
 
 		return objectLiteralString;
 	}
-
-	const {
-		// to speed up the process if we only need an JSON.
-		shouldSkipGeneratingObjectLiteral = false,
-	} = options;
-
-	const formattedJSONString = JSON
-		.stringify(json, JSONStringifyReplacer, 4);
-
-	const objectLiteralString = shouldSkipGeneratingObjectLiteral ?
-		formattedJSONString :
-		somethingForFormattingObjectLiteralThatMustHappenAfterStringify(formattedJSONString);
-
-	return {
-		formattedJSONString,
-		objectLiteralString,
-	};
 };
