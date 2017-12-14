@@ -14,7 +14,7 @@ function removeAllRulesAboutStyles(webpackConfigRules) {
 			toDetectTesterFunctionBody:   testerString => !!testerString.match(theRegExpForTesters),
 			toDetectLoaderStringOrRegExp: loaderString => !!loaderString.match(theRegExpForLoaders),
 			toDetectLoaderFunctionBody:   loaderString => !!loaderString.match(theRegExpForLoaders),
-			testerForIgnoreLoader: /.(css|styl|stylus|sass|scss|less)$/,
+			testerForIgnoreLoader: /\.(css|styl|stylus|sass|scss|less)$/,
 		}
 	);
 
