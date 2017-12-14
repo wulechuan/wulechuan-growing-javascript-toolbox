@@ -2,6 +2,7 @@
 
 const fileSystem = require('fs');
 const pathTool = require('path');
+const enFileSystemEnsure = require('enfsensure');
 
 const formatJSON = require('./format-json');
 
@@ -18,10 +19,12 @@ module.exports = (outputFilePath, JSONToWrite, options) => {
 		dir: outputFileFolder,
 	} = pathTool.parse(outputFilePath);
 
+	const resolvedOutputFileFolder = pathTool.resolve(outputFileFolder);
+
 	const reliableOutputFilePath = pathTool.format({
-		dir: outputFileFolder,
+		dir: resolvedOutputFileFolder,
 		name: outputFileNameWithoutExt,
-		ext: shouldWriteInJSONFormat ? 'json' : 'js',
+		ext: shouldWriteInJSONFormat ? '.json' : '.js',
 	});
 
 	const {
@@ -37,6 +40,7 @@ module.exports = (outputFilePath, JSONToWrite, options) => {
 		fileContents = `${eslintConfigStringIfWriteJSFormat}\n\nconst ${constNameIfWriteJSFormat} = ${objectLiteralString};\n`;
 	}
 
+	enFileSystemEnsure.ensureDirSync(resolvedOutputFileFolder);
 	fileSystem.writeFileSync(reliableOutputFilePath, fileContents);
 
 	if (!shouldNotLog) {
