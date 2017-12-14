@@ -24,7 +24,7 @@
             "skipBlankLines": false
             , "ignoreComments": false
         }]
-        , "linebreak-style":[ "error", "unix" ]
+        , "linebreak-style":[ 0, "unix" ]
         , "quotes":[ "error", "single" ]
         , "semi":[ "error", "always" ]
         , "max-statements": [ "warn", 32 ]

@@ -5,12 +5,16 @@ const gaze = require('gaze');
 const chalk = require('chalk');
 const globsMatcher = require('matcher');
 
+const actionReturnValueThatStandsForFinish = 'watching action finished';
+
 const categorizedGlobsLazilyWatchingMechanism = {
 	LazyWatcher,
 	setupWatchers,
+	getLoggingColorNamesPairForAChange,
+	actionReturnValueThatStandsForFinish,
 };
 
-const defaultIntervalInMilliSeconds = 600;
+const defaultIntervalInMilliSeconds = 900;
 // const gazeDebounceDelayInMilliSeconds = 500;
 
 module.exports = categorizedGlobsLazilyWatchingMechanism;
@@ -22,9 +26,69 @@ module.exports = categorizedGlobsLazilyWatchingMechanism;
 
 
 
+function getLoggingColorNamesPairForAChange(typeOfTheChange) {
+	let loggingKeyColor;
+	let loggingKeyBgColor;
+	/* eslint-disable indent */
+	switch (typeOfTheChange) {
+		case 'changed':
+			loggingKeyColor = 'blue';
+			loggingKeyBgColor = 'bgBlue';
+			break;
+
+		case 'added':
+			loggingKeyColor = 'green';
+			loggingKeyBgColor = 'bgGreen';
+			break;
+
+		case 'deleted':
+			loggingKeyColor = 'red';
+			loggingKeyBgColor = 'bgRed';
+			break;
+
+		case 'renamed':
+			loggingKeyColor = 'cyan';
+			loggingKeyBgColor = 'bgCyan';
+			break;
+
+		default:
+			loggingKeyColor = 'white';
+			loggingKeyBgColor = 'bgWhite';
+			break;
+	}
+	/* eslint-enable indent */
+
+	return {
+		loggingKeyColor,
+		loggingKeyBgColor,
+	};
+}
 
 
-function LazyWatcher(actionToTake, options) {
+function logDetailsOfChangedFiles(details) {
+	if (!details || !details.changes) {
+		// 由其他途径主动执行动作，而非经由【监测】机制自动执行动作时，
+		// 没有details传入。
+		return;
+	}
+	const listString = details.changes.reduce((accumString, changeRecord) => {
+		const {
+			loggingKeyColor,
+			loggingKeyBgColor,
+		} = categorizedGlobsLazilyWatchingMechanism.getLoggingColorNamesPairForAChange(changeRecord.type);
+
+		return `${accumString}\n    ${
+			chalk[loggingKeyBgColor].black(` ${changeRecord.type} `)
+		} ${
+			chalk.bgWhite.black(` ${changeRecord.category} `)
+		} ${chalk[loggingKeyColor](changeRecord.file)}.`;
+	}, `    ${chalk.gray(new Date(details.timestamp).toLocaleString())}`);
+
+	console.log(`\n>>> Files changed in this batch:\n${listString}\n`);
+}
+
+
+function LazyWatcher(categoryId, actionToTake, options) {
 	if (typeof actionToTake !== 'function') {
 		throw new TypeError('actionToTake must be a function');
 	}
@@ -34,14 +98,20 @@ function LazyWatcher(actionToTake, options) {
 	} = options;
 
 	let somethingChangedAfterLastActionStart = false;
+	let knownChangesSoFar = [];
 	let actionIsOnGoing = false;
-	// let lastActionTakenTimestamp = new Date().getTime();
+	let lastActionTakenTimestamp = NaN;
 	let currentIntervalId = NaN;
 
 	this.stopWatching = stopWatching;
 	this.forceToTakeActionOnce = takeActionOnce;
-	this.rememberAChange = function() {
+	this.rememberAChange = function(typeOfTheChange, involvedFilePath, involvedCategoryId) {
 		somethingChangedAfterLastActionStart = true;
+		knownChangesSoFar.push({
+			type: typeOfTheChange,
+			file: involvedFilePath,
+			category: involvedCategoryId,
+		});
 	};
 
 	function isAPromiseObject(input) {
@@ -57,26 +127,47 @@ function LazyWatcher(actionToTake, options) {
 			return;
 		}
 
+		lastActionTakenTimestamp = new Date().getTime();
+
 		actionIsOnGoing = true;
+		const changesWeAreDealingWith =  [...knownChangesSoFar ];
+
+		knownChangesSoFar = [];
 		somethingChangedAfterLastActionStart = false;
 
-		console.log('');
-		const returnedValue = actionToTake(onActionFinishedOnce);
+		const changeDetails = {
+			timestamp: lastActionTakenTimestamp,
+			changes: changesWeAreDealingWith,
+		};
 
-		if (returnedValue === 'watching action finished') {
-			actionIsOnGoing = false;
-			// console.log('>>>', chalk.gray(`Categorized watcher\'s action done. That was told by the ${chalk.bgRed.black(' return value ')}.`));
+		console.log('');
+		logDetailsOfChangedFiles(changeDetails);
+
+		const returnedValue = actionToTake(actionFinishedCallback, changeDetails);
+
+		if (returnedValue === actionReturnValueThatStandsForFinish) {
+			onActionFinished('via returned value');
 		} else if (isAPromiseObject(returnedValue)) {
-			returnedValue.done(() => {
-				actionIsOnGoing = false;
-				// console.log('>>>', chalk.gray(`Categorized watcher\'s action done. That was told by the ${chalk.bgRed.black(' Promise object ')}.`));
-			});
+			returnedValue.done(() => { onActionFinished('via Promise object'); });
 		}
 	}
 
-	function onActionFinishedOnce(/* info */) {
-		// console.log('>>>', chalk.gray(`Categorized watcher\'s action done. That was told by the ${chalk.bgRed.black(' callback ')}.`));
+	function onActionFinished(theWayLeadsHere) {
 		actionIsOnGoing = false;
+		lastActionTakenTimestamp = NaN;
+
+		console.log(`>>> ${
+			chalk.bgWhite.black(` ${categoryId} `)
+		} watcher's action was done. This was told by ${
+			chalk.magenta(theWayLeadsHere.slice(4))
+		}.`);
+
+		takeActionOnce(); // 如果已经有后续变化，继续执行预设动作。
+	}
+
+	function actionFinishedCallback(/* info */) {
+		actionIsOnGoing = false;
+		onActionFinished('via callback');
 	}
 
 	function startToWatch() {
@@ -98,7 +189,10 @@ function LazyWatcher(actionToTake, options) {
 
 
 function setupWatchers(categorizedGlobsToWatch, options = {}) {
-	const { basePath = process.cwd() } = options;
+	const {
+		basePath = process.cwd(),
+		shouldLogEverySingleChange = false,
+	} = options;
 	let { aggregatedSourceGlobsToWatch } = options;
 
 	const shouldAggregateGlobsFromCategoriedOnes = !Array.isArray(aggregatedSourceGlobsToWatch);
@@ -117,7 +211,7 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 		const globsOfThisCategory = rawGlobsOfThisCategory.map(glob => glob.replace(/\\/g, '/'));
 		category.globsToWatch = globsOfThisCategory;
 
-		catagorizedWatchers[categoryId] = new this.LazyWatcher(actionToTake, {
+		catagorizedWatchers[categoryId] = new this.LazyWatcher(categoryId, actionToTake, {
 			// debounceDelay: gazeDebounceDelayInMilliSeconds,
 		});
 
@@ -149,36 +243,10 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 
 
 	function printBeatifulLogForOneChange(timeStamp, typeOfTheChange, involvedFilePath, categoryId) {
-		let loggingKeyColor;
-		let loggingKeyBgColor;
-		/* eslint-disable indent */
-		switch (typeOfTheChange) {
-			case 'changed':
-				loggingKeyColor = 'blue';
-				loggingKeyBgColor = 'bgBlue';
-				break;
-
-			case 'added':
-				loggingKeyColor = 'green';
-				loggingKeyBgColor = 'bgGreen';
-				break;
-
-			case 'deleted':
-				loggingKeyColor = 'red';
-				loggingKeyBgColor = 'bgRed';
-				break;
-
-			case 'renamed':
-				loggingKeyColor = 'cyan';
-				loggingKeyBgColor = 'bgCyan';
-				break;
-
-			default:
-				loggingKeyColor = 'white';
-				loggingKeyBgColor = 'bgWhite';
-				break;
-		}
-		/* eslint-enable indent */
+		const {
+			loggingKeyColor,
+			loggingKeyBgColor,
+		} = getLoggingColorNamesPairForAChange(typeOfTheChange);
 
 		console.log(`\n>>> ${
 			chalk.gray(timeStamp)
@@ -218,9 +286,12 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 		});
 
 		involvedCategoriesId.forEach((involvedCategoryId) => {
-			printBeatifulLogForOneChange(timeStamp, typeOfTheChange, involvedFilePath, involvedCategoryId);
+			if (shouldLogEverySingleChange) {
+				printBeatifulLogForOneChange(timeStamp, typeOfTheChange, involvedFilePath, involvedCategoryId);
+			}
+
 			const involvedWatcher = catagorizedWatchers[involvedCategoryId];
-			involvedWatcher.rememberAChange();
+			involvedWatcher.rememberAChange(typeOfTheChange, involvedFilePath, involvedCategoryId);
 		});
 	}
 }

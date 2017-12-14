@@ -134,23 +134,23 @@ function toWatchFiles() {
 	categorizedGlobsLazilyWatchingMechanism.setupWatchers(categorizedSourceGlobsToWatch);
 }
 
-function toCopyLibraryMediaFiles(tellGlobsWatcherThisActionFinishedOnce) {
+function toCopyLibraryMediaFiles(tellGlobsWatcherThisActionFinishedOnce /* , details */) {
 	// something
 	doCopyLibraryMediaFiles(tellGlobsWatcherThisActionFinishedOnce);
 }
 
-function toCompileLibraryStyles(tellGlobsWatcherThisActionFinishedOnce) {
+function toCompileLibraryStyles(tellGlobsWatcherThisActionFinishedOnce /* , details */) {
 	// something
 	console.log(libraryStylesSourceGlobsAsCompilationEntries);
 	tellGlobsWatcherThisActionFinishedOnce();
 }
 
-function toCompileUsingWebpack(tellGlobsWatcherThisActionFinishedOnce) {
+function toCompileUsingWebpack(tellGlobsWatcherThisActionFinishedOnce /* , details */) {
 	// something
 	tellGlobsWatcherThisActionFinishedOnce();
 }
 
-function toCompileDocsSiteLayoutStyles(tellGlobsWatcherThisActionFinishedOnce) {
+function toCompileDocsSiteLayoutStyles(tellGlobsWatcherThisActionFinishedOnce /* , details */) {
 	// something
 	console.log(docsWebsiteLayoutStylesSourceGlobsAsCompilationEntries);
 	tellGlobsWatcherThisActionFinishedOnce();
