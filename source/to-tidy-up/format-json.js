@@ -43,10 +43,12 @@ module.exports = (json, options = {}) => {
 	function somethingForFormattingObjectLiteralThatMustHappenAfterStringify(formattedJSONString) {
 		const objectLiteralString = formattedJSONString
 			// 将【正则表达式】的外括【引号】去除
-			.replace(/ ["']\/([^*\n][^\n]*)\/([gi]?)["']/g, ' /$1/$2')
+			.replace(/ ["']\/([^*\n][^\n]*)\/(gi|ig|g|i)?["']/g, ' /$1/$2')
+
+			// 去除【键名】不必要的双引号
+			.replace(/"([$_\w]+)": /g, '$1: ')
 
 			// 将双引号改为单引号
-			.replace(/"(\w+)": /g, '$1: ')
 			.replace(/ "([^\n]*)[^\\]?": /g, " '$1': ") // eslint-disable-line quotes
 			.replace(/ "([^\n]*)[^\\]?"(,?\n)/g, " '$1'$2") // eslint-disable-line quotes
 
