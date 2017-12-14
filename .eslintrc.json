@@ -29,8 +29,9 @@
         , "semi":[ "error", "always" ]
         , "max-statements": [ "warn", 32 ]
         , "multiline-ternary": ["error", "always-multiline" ]
-        , "yoda": [ "error", "never" ]
+        , "no-console": [ 0 ]
         , "new-parens": [ 0 ]
+        , "yoda": [ "error", "never" ]
         , "comma-dangle": [ "error", "always-multiline" ]
         , "no-return-assign": "error"
         , "no-new-func": "error"
