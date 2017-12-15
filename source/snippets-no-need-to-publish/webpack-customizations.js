@@ -1,5 +1,7 @@
 /* eslint no-console: 0, indent: [ 2, 'tab' ], no-tabs: 0 */
 
+const pathTool = require('path');
+
 const webpackConfigRulesRemover = require('../utils/filter-out-webpack-rules');
 const writeJSONToFile = require('../utils/write-json-to-file');
 
@@ -45,11 +47,10 @@ function removeSomeRulesAsNeeded(webpackConfig) {
 
 function writeWebpackConfigToFileForInspection(webpackConfig, reportsFolder) {
 	writeJSONToFile(
-		'last-build-used-webpack-config.js',
+		pathTool.resovle(reportsFolder, 'last-build-used-webpack-config.js'),
 		webpackConfig,
 		{
-			outputFolder: reportsFolder,
-			constNameIfWritesJS: 'myWebpackConfig',
+			nameOfConstIfWriteInJSFormat: 'myWebpackConfig',
 		}
 	);
 }

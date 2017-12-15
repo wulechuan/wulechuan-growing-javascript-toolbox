@@ -9,9 +9,9 @@ const formatJSON = require('./format-json');
 module.exports = (outputFilePath, JSONToWrite, options) => {
 	const {
 		shouldWriteInJSONFormat = false,
-		constNameIfWriteJSFormat,
+		nameOfConstIfWriteInJSFormat,
+		eslintConfigStringIfWriteInJSFormat = '/* eslint-disable */',
 		shouldNotLog = false,
-		eslintConfigStringIfWriteJSFormat = '/* eslint-disable */',
 	} = options;
 
 	const {
@@ -37,7 +37,7 @@ module.exports = (outputFilePath, JSONToWrite, options) => {
 	if (shouldWriteInJSONFormat) {
 		fileContents = `${formattedJSONString}\n`;
 	} else {
-		fileContents = `${eslintConfigStringIfWriteJSFormat}\n\nconst ${constNameIfWriteJSFormat} = ${objectLiteralString};\n`;
+		fileContents = `${eslintConfigStringIfWriteInJSFormat}\n\nconst ${nameOfConstIfWriteInJSFormat} = ${objectLiteralString};\n`;
 	}
 
 	enFileSystemEnsure.ensureDirSync(resolvedOutputFileFolder);
