@@ -71,20 +71,28 @@ function logDetailsOfChangedFiles(details) {
 		// 没有details传入。
 		return;
 	}
+
+	const headingString = `\n>>> Files changed in this batch:\n    ${
+		chalk.gray(new Date(details.timestamp).toLocaleString())
+	}`;
+
 	const listString = details.changes.reduce((accumString, changeRecord) => {
 		const {
 			loggingKeyColor,
 			loggingKeyBgColor,
 		} = categorizedGlobsLazilyWatchingMechanism.getLoggingColorNamesPairForAChange(changeRecord.type);
 
-		return `${accumString}\n    ${
+		return `${accumString}    ${
 			chalk[loggingKeyBgColor].black(` ${changeRecord.type} `)
+		}${
+			changeRecord.type === 'added' ? '  ': ''
 		} ${
 			chalk.bgWhite.black(` ${changeRecord.category} `)
-		} ${chalk[loggingKeyColor](changeRecord.file)}.`;
-	}, `    ${chalk.gray(new Date(details.timestamp).toLocaleString())}`);
+		} ${chalk[loggingKeyColor](changeRecord.file)}.\n`;
 
-	console.log(`\n>>> Files changed in this batch:\n${listString}\n`);
+	}, '');
+
+	console.log(`${headingString}\n${listString}`);
 }
 
 
@@ -156,9 +164,13 @@ function LazyWatcher(categoryId, actionToTake, options) {
 		actionIsOnGoing = false;
 		lastActionTakenTimestamp = NaN;
 
-		console.log(`>>> ${
+		console.log(`\n>>> ${
+			chalk.blue('Action')
+		} of the watcher for ${
 			chalk.bgWhite.black(` ${categoryId} `)
-		} watcher's action was done. This was told by ${
+		} was ${
+			chalk.blue('done')
+		}.\n    Told by the ${
 			chalk.magenta(theWayLeadsHere.slice(4))
 		}.`);
 
