@@ -1,6 +1,22 @@
 const chalk = require('chalk');
 
-module.exports = function removeWebpackRulesThatSatisfyConditions(webpackConfigRules, options = {}) {
+const {
+	createMethodForRemovingWebpackConfigAllRulesAboutStyles,
+	createMethodForRemovingWebpackConfigAllRulesAboutMediaFiles,
+	createMethodForRemovingWebpackConfigAllRulesOfAllTypes,
+} = require('./filter-out-webpack-rules-the-presets');
+
+module.exports = {
+	removeRulesThatSatisfyConditions: removeWebpackConfigRulesThatSatisfyConditions,
+	presets: {
+		removeAllAboutStyles: createMethodForRemovingWebpackConfigAllRulesAboutStyles(removeWebpackConfigRulesThatSatisfyConditions),
+		removeAllAboutMedia: createMethodForRemovingWebpackConfigAllRulesAboutMediaFiles(removeWebpackConfigRulesThatSatisfyConditions),
+		removeEverything: createMethodForRemovingWebpackConfigAllRulesOfAllTypes(removeWebpackConfigRulesThatSatisfyConditions),
+	},
+};
+
+
+function removeWebpackConfigRulesThatSatisfyConditions(webpackConfigRules, options = {}) {
 	if (!Array.isArray(webpackConfigRules)) {
 		throw new TypeError(chalk.red(`\nThe ${
 			chalk.blue('first')
@@ -135,4 +151,4 @@ module.exports = function removeWebpackRulesThatSatisfyConditions(webpackConfigR
 
 
 	return keptRulesAfterFiltering;
-};
+}
