@@ -47,7 +47,7 @@ const libraryMediaSourceGlobs = [
 	joinPath(sourceCodeRootFolder, '**/*.png'),
 	joinPath(sourceCodeRootFolder, '**/*.jpg'),
 	joinPath(sourceCodeRootFolder, '**/*.jpeg'),
-	joinPath(sourceCodeRootFolder, '**/*.git'),
+	joinPath(sourceCodeRootFolder, '**/*.gif'),
 	joinPath(sourceCodeRootFolder, '**/*.webp'),
 	joinPath(sourceCodeRootFolder, '**/*.svg'),
 	joinPath(sourceCodeRootFolder, '**/*.eot'),
