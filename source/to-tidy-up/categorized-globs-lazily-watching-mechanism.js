@@ -7,23 +7,18 @@ const globsMatcher = require('matcher');
 
 const actionReturnValueThatStandsForFinish = 'watching action finished';
 
-const categorizedGlobsLazilyWatchingMechanism = {
-	LazyWatcher,
-	setupWatchers,
-	getLoggingColorNamesPairForAChange,
-	actionReturnValueThatStandsForFinish,
-};
-
 const defaultIntervalInMilliSeconds = 900;
 // const gazeDebounceDelayInMilliSeconds = 500;
 
+
+const categorizedGlobsLazilyWatchingMechanism = {
+	LazyWatcher, // eslint-disable-line no-use-before-define
+	setupWatchers, // eslint-disable-line no-use-before-define
+	getLoggingColorNamesPairForAChange, // eslint-disable-line no-use-before-define
+	actionReturnValueThatStandsForFinish,
+};
+
 module.exports = categorizedGlobsLazilyWatchingMechanism;
-
-
-
-
-
-
 
 
 function getLoggingColorNamesPairForAChange(typeOfTheChange) {
@@ -85,11 +80,10 @@ function logDetailsOfChangedFiles(details) {
 		return `${accumString}    ${
 			chalk[loggingKeyBgColor].black(` ${changeRecord.type} `)
 		}${
-			changeRecord.type === 'added' ? '  ': ''
+			changeRecord.type === 'added' ? '  ' : ''
 		} ${
 			chalk.bgWhite.black(` ${changeRecord.category} `)
 		} ${chalk[loggingKeyColor](changeRecord.file)}.\n`;
-
 	}, '');
 
 	console.log(`${headingString}\n${listString}`);
@@ -111,9 +105,9 @@ function LazyWatcher(categoryId, actionToTake, options) {
 	let lastActionTakenTimestamp = NaN;
 	let currentIntervalId = NaN;
 
-	this.stopWatching = stopWatching;
-	this.forceToTakeActionOnce = takeActionOnce;
-	this.rememberAChange = function(typeOfTheChange, involvedFilePath, involvedCategoryId) {
+	this.stop = toStopWatching; // eslint-disable-line no-use-before-define
+	this.forceToTakeActionOnce = takeActionOnce; // eslint-disable-line no-use-before-define
+	this.rememberAChange = function (typeOfTheChange, involvedFilePath, involvedCategoryId) {
 		somethingChangedAfterLastActionStart = true;
 		knownChangesSoFar.push({
 			type: typeOfTheChange,
@@ -122,8 +116,56 @@ function LazyWatcher(categoryId, actionToTake, options) {
 		});
 	};
 
+	startToWatch(); // eslint-disable-line no-use-before-define
+
+
 	function isAPromiseObject(input) {
 		return !!input && typeof input.then === 'function' && typeof input.done === 'function';
+	}
+
+	function startToWatch() {
+		console.log(`\n    ${chalk.blue('Starting watcher')} for globs in category "${chalk.green(categoryId)}"...`);
+		currentIntervalId = setInterval(takeActionOnce, interval); // eslint-disable-line no-use-before-define
+	}
+
+	function stopWatching() { // private -- for internal usage
+		clearInterval(currentIntervalId);
+	}
+
+	function toStopWatching() { // for public method
+		stopWatching();
+		takeActionOnce(); // eslint-disable-line no-use-before-define
+	}
+
+	function onActionFinished(theWayLeadsHere) {
+		actionIsOnGoing = false;
+		lastActionTakenTimestamp = NaN;
+
+		console.log(`\n>>> ${
+			chalk.blue('Action')
+		} of the watcher for ${
+			chalk.bgWhite.black(` ${categoryId} `)
+		} was ${
+			chalk.blue('done')
+		}.\n    Told by the ${
+			chalk.magenta(theWayLeadsHere.slice(4))
+		}.`);
+
+		// 如果已经有后续变化，继续执行预设动作。
+		takeActionOnce(); // eslint-disable-line no-use-before-define
+
+		// 如果上面一行（即takeActionOnce()）重新是的actionIsOnGoing，
+		// 意味着已有任务在队列中等待至今，因此暂时仍不必调用startToWatch来启动侦听。
+		// 顺便：如果每每执行至此行，actionIsOnGoing总是true，
+		// 则以为着异步执行的任务较慢，文件变动事件发生得较快、较频繁。
+		// 这种情况没有害处，仅仅是每批次处理的文件数较多，因为文件变动积攒很快。
+		if (!actionIsOnGoing) {
+			startToWatch();
+		}
+	}
+
+	function actionFinishedCallback(/* info */) {
+		onActionFinished('via callback');
 	}
 
 	function takeActionOnce() {
@@ -137,8 +179,10 @@ function LazyWatcher(categoryId, actionToTake, options) {
 
 		lastActionTakenTimestamp = new Date().getTime();
 
+		stopWatching();
 		actionIsOnGoing = true;
-		const changesWeAreDealingWith =  [...knownChangesSoFar ];
+
+		const changesWeAreDealingWith = [].concat(knownChangesSoFar);
 
 		knownChangesSoFar = [];
 		somethingChangedAfterLastActionStart = false;
@@ -159,45 +203,7 @@ function LazyWatcher(categoryId, actionToTake, options) {
 			returnedValue.done(() => { onActionFinished('via Promise object'); });
 		}
 	}
-
-	function onActionFinished(theWayLeadsHere) {
-		actionIsOnGoing = false;
-		lastActionTakenTimestamp = NaN;
-
-		console.log(`\n>>> ${
-			chalk.blue('Action')
-		} of the watcher for ${
-			chalk.bgWhite.black(` ${categoryId} `)
-		} was ${
-			chalk.blue('done')
-		}.\n    Told by the ${
-			chalk.magenta(theWayLeadsHere.slice(4))
-		}.`);
-
-		takeActionOnce(); // 如果已经有后续变化，继续执行预设动作。
-	}
-
-	function actionFinishedCallback(/* info */) {
-		actionIsOnGoing = false;
-		onActionFinished('via callback');
-	}
-
-	function startToWatch() {
-		currentIntervalId = setInterval(takeActionOnce, interval);
-	}
-
-	function stopWatching() {
-		clearInterval(currentIntervalId);
-		takeActionOnce();
-	}
-
-	(function init() {
-		startToWatch();
-	})();
 }
-
-
-
 
 
 function setupWatchers(categorizedGlobsToWatch, options = {}) {
@@ -228,15 +234,15 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 		});
 
 		if (shouldAggregateGlobsFromCategoriedOnes) {
-			aggregatedSourceGlobsToWatch = [
-				...aggregatedSourceGlobsToWatch,
-				globsOfThisCategory,
-			];
+			aggregatedSourceGlobsToWatch = [].concat(
+				aggregatedSourceGlobsToWatch,
+				globsOfThisCategory
+			);
 		}
 	});
 
 	gaze(aggregatedSourceGlobsToWatch, (error, thisGazer) => {
-		thisGazer.on('all', onSingleFileInvolved);
+		thisGazer.on('all', onSingleFileInvolved); // eslint-disable-line no-use-before-define
 
 		// 不论是直接侦听all事件，还是分别侦听以下四种事件，都无法避免将rename误判为两个不同事件。
 		// 多数情况下是误判为文件先被deleted再被renamed；偶尔会出现先deleted后added。
@@ -247,11 +253,6 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 		// 	thisGazer.on('changed', (involvedFilePath) => { onSingleFileInvolved('changed', involvedFilePath); });
 		// 	thisGazer.on('deleted', (involvedFilePath) => { onSingleFileInvolved('deleted', involvedFilePath); });
 	});
-
-
-
-
-
 
 
 	function printBeatifulLogForOneChange(timeStamp, typeOfTheChange, involvedFilePath, categoryId) {
@@ -267,8 +268,7 @@ function setupWatchers(categorizedGlobsToWatch, options = {}) {
 		}\n    ${
 			chalk[loggingKeyBgColor].black(` ${typeOfTheChange} `)
 		} ${
-			chalk[loggingKeyColor](involvedFilePath)}`
-		);
+			chalk[loggingKeyColor](involvedFilePath)}`);
 	}
 
 	function onSingleFileInvolved(typeOfTheChange, involvedFilePath) {
