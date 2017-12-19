@@ -1,19 +1,25 @@
+/* eslint no-use-before-define: 0, no-tabs: 0, indent: [ 2, 'tab' ], no-console: 0 */
 const chalk = require('chalk');
 
 const {
-	createMethodForRemovingWebpackConfigAllRulesAboutStyles,
-	createMethodForRemovingWebpackConfigAllRulesAboutMediaFiles,
-	createMethodForRemovingWebpackConfigAllRulesOfAllTypes,
-} = require('./filter-out-webpack-rules-the-presets');
+	removeWebpackConfigAllRulesOfAllTypes,
+	removeWebpackConfigAllRulesAboutStyles,
+	removeWebpackConfigAllRulesAboutMediaFiles,
+} = require('./filter-out-webpack-rules-the-presets')(removeWebpackConfigRulesThatSatisfyConditions);
 
-module.exports = {
+const webpackConfigRulesRemover = {
 	removeRulesThatSatisfyConditions: removeWebpackConfigRulesThatSatisfyConditions,
 	presets: {
-		removeAllAboutStyles: createMethodForRemovingWebpackConfigAllRulesAboutStyles(removeWebpackConfigRulesThatSatisfyConditions),
-		removeAllAboutMedia: createMethodForRemovingWebpackConfigAllRulesAboutMediaFiles(removeWebpackConfigRulesThatSatisfyConditions),
-		removeEverything: createMethodForRemovingWebpackConfigAllRulesOfAllTypes(removeWebpackConfigRulesThatSatisfyConditions),
+		removeEverything: removeWebpackConfigAllRulesOfAllTypes,
+		removeAllAboutStyles: removeWebpackConfigAllRulesAboutStyles,
+		removeAllAboutMedia: removeWebpackConfigAllRulesAboutMediaFiles,
 	},
 };
+
+module.exports = webpackConfigRulesRemover;
+
+
+
 
 
 function removeWebpackConfigRulesThatSatisfyConditions(webpackConfigRules, options = {}) {
