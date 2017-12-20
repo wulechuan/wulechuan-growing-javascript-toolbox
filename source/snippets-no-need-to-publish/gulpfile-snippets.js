@@ -218,7 +218,7 @@ gulp.task('distribution: compile styles', toCompileLibraryStyles);
 gulp.task('distribution: build using webpack', toCompileUsingWebpack);
 
 gulp.task('distribution-entry-task', (thisTaskDone) => {
-	process.env.RUN_ENV = 'PRODUCTION';
+	process.env.NODE_ENV = 'PRODUCTION';
 	runTasksSequentially(
 		'distribution: delete old distribution',
 		[
