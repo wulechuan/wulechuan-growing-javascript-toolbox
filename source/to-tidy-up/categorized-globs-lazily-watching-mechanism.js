@@ -39,7 +39,7 @@ function normalizeOneGlob(rawGlob, basePath) {
 		normalizedGlob = normalizedGlob.slice(1);
 	}
 
-	normalizedGlob = pathTool.relative(basePath, normalizedGlob).replace(/\\/, '/');
+	normalizedGlob = pathTool.relative(basePath, normalizedGlob).replace(/\\/g, '/');
 
 	if (hasNegativeSign) {
 		normalizedGlob = `!${normalizedGlob}`;

@@ -131,7 +131,7 @@ const doCopyLibraryMediaFiles = createTaskForCopyingFiles(
 );
 
 function toWatchFiles() {
-	categorizedGlobsLazilyWatchingMechanism.setupWatchers(categorizedSourceGlobsToWatch, {
+	categorizedGlobsLazilyWatchingMechanism.setupWatchers(categorizedWatchingSetup, {
 		// basePath: process.cwd(),
 		// shouldShareSingleUnderlyingWatcherInstanceAcrossAllCategories: false,
 		// aggregatedSourceGlobsToWatch: null,
@@ -173,7 +173,7 @@ function toCompileDocsSiteLayoutStyles(tellGlobsWatcherThisActionFinishedOnce /*
 * ****************************************
 */
 
-const categorizedSourceGlobsToWatch = {
+const categorizedWatchingSetup = {
 	'docs website layout: styles': {
 		globsToWatch: docsWebsiteLayoutStylesSourceGlobsToWatch,
 		actionToTake: toCompileDocsSiteLayoutStyles,
