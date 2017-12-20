@@ -131,7 +131,12 @@ const doCopyLibraryMediaFiles = createTaskForCopyingFiles(
 );
 
 function toWatchFiles() {
-	categorizedGlobsLazilyWatchingMechanism.setupWatchers(categorizedSourceGlobsToWatch);
+	categorizedGlobsLazilyWatchingMechanism.setupWatchers(categorizedSourceGlobsToWatch, {
+		// basePath: process.cwd(),
+		// shouldShareSingleUnderlyingWatcherInstanceAcrossAllCategories: false,
+		// aggregatedSourceGlobsToWatch: null,
+		// shouldLogVerbosely: false,
+	});
 }
 
 function toCopyLibraryMediaFiles(tellGlobsWatcherThisActionFinishedOnce /* , details */) {
