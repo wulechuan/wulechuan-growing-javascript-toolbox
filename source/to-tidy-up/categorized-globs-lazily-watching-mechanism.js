@@ -11,7 +11,7 @@ const { isMatch: pathMatchesGlob } = globsMatcher;
 const actionReturnValueThatStandsForFinish = 'watching action finished';
 const defaultTimestampFormat = 'HH:mm:ss';
 
-const defaultIntervalInMilliSeconds = 900;
+const defaultIntervalForCheckingEventsInMilliSeconds = 900;
 // const gazeDebounceDelayInMilliSeconds = 500;
 
 const consoleSupportsColors = chalk.supportsColor;
@@ -207,7 +207,7 @@ function listenToGazeEvents(globsToWatch, onASingleFileInvolved) {
 
 function LazyWatcher(categoryId, globsToWatch, actionToTake, options) {
 	if (typeof actionToTake !== 'function') {
-		throw new TypeError('actionToTake must be a function');
+		throw new TypeError(chalk.bgRed.black(' Arguments[2] ("actionToTake"): Must be a function. '));
 	}
 
 	const thisWatcher = this;
@@ -216,7 +216,8 @@ function LazyWatcher(categoryId, globsToWatch, actionToTake, options) {
 
 	const {
 		basePath = process.cwd(),
-		interval = defaultIntervalInMilliSeconds,
+		intervalForCheckingEvents = defaultIntervalForCheckingEventsInMilliSeconds,
+		shouldStartWatchingOnConstruction = true,
 		shouldLogVerbosely = false,
 	} = options;
 
@@ -233,7 +234,8 @@ function LazyWatcher(categoryId, globsToWatch, actionToTake, options) {
 	thisWatcher.rawGlobsToWatch = globsToWatch;
 	thisWatcher.normalizedGlobs = normalizedGlobs;
 
-	thisWatcher.stop = toStopWatching;
+	thisWatcher.start = startToWatch;
+	thisWatcher.stop = stopWatchingPublicMethod;
 	thisWatcher.forceToTakeActionOnce = takeActionOnce;
 	thisWatcher.rememberAChange = rememberAChange;
 	thisWatcher.listenToGazeEvents = () => {
@@ -241,18 +243,27 @@ function LazyWatcher(categoryId, globsToWatch, actionToTake, options) {
 	};
 
 
-	startToWatch();
-	logWatchingGlobsForOneCategory(categoryId, normalizedGlobs, {
-		shouldOmitHeading: true,
-	});
+	if (shouldStartWatchingOnConstruction) {
+		startToWatch(true);
+	}
 
 
-	function startToWatch() {
+	function startToWatch(shouldLogWatchingDetails) {
 		console.log(`\n${
 			chalk.bgGreen.black(' Watching ')
 		} globs in category ${categoryIdPrintString}...`);
 
-		currentIntervalId = setInterval(takeActionOnce, interval);
+		if (isNaN(currentIntervalId)) {
+			currentIntervalId = setInterval(takeActionOnce, intervalForCheckingEvents);
+		} else {
+			console.log(`Watcher of category ${categoryIdPrintString} has already started before.`);
+		}
+
+		if (shouldLogWatchingDetails) {
+			logWatchingGlobsForOneCategory(categoryId, normalizedGlobs, {
+				shouldOmitHeading: true,
+			});
+		}
 	}
 
 	function rememberAChange(typeOfTheChange, involvedFileRawPath) {
@@ -278,9 +289,10 @@ function LazyWatcher(categoryId, globsToWatch, actionToTake, options) {
 
 	function stopWatching() { // private -- for internal usage
 		clearInterval(currentIntervalId);
+		currentIntervalId = NaN;
 	}
 
-	function toStopWatching() { // for public method
+	function stopWatchingPublicMethod() { // for public method
 		stopWatching();
 		takeActionOnce();
 	}
@@ -302,11 +314,11 @@ function LazyWatcher(categoryId, globsToWatch, actionToTake, options) {
 		// 如果已经有后续变化，继续执行预设动作。
 		takeActionOnce();
 
-		// 如果上面一行（即takeActionOnce()）重新是的actionIsOnGoing，
+		// 如果上面一行（即 takeActionOnce() ）重新使得 actionIsOnGoing 为 true，
 		// 意味着已有任务在队列中等待至今，因此暂时仍不必调用startToWatch来启动侦听。
-		// 顺便：如果每每执行至此行，actionIsOnGoing总是true，
-		// 则以为着异步执行的任务较慢，文件变动事件发生得较快、较频繁。
-		// 这种情况没有害处，仅仅是每批次处理的文件数较多，因为文件变动积攒很快。
+		// 顺便：如果每每执行至此行，actionIsOnGoing 总是 true，
+		// 则意味着异步执行的任务较慢，文件变动事件发生得较快、较频繁。
+		// 这种情况没有害处，仅仅是文件变动积攒很快，每批次处理的文件数较多罢了。
 		if (!actionIsOnGoing) {
 			startToWatch();
 		}
