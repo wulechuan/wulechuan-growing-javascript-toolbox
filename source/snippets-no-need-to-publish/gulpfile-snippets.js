@@ -131,7 +131,7 @@ const doCopyLibraryMediaFiles = createTaskForCopyingFiles(
 );
 
 function toWatchFiles() {
-	categorizedGlobsLazilyWatchingMechanism.setupWatchers(categorizedWatchingSetup, {
+	categorizedGlobsLazilyWatchingMechanism.createWatchersAccordingTo(scopedWatchingSettings, {
 		// basePath: process.cwd(),
 		// shouldShareSingleUnderlyingWatcherInstanceAcrossAllCategories: false,
 		// aggregatedSourceGlobsToWatch: null,
@@ -173,18 +173,21 @@ function toCompileDocsSiteLayoutStyles(tellGlobsWatcherThisActionFinishedOnce /*
 * ****************************************
 */
 
-const categorizedWatchingSetup = {
+const scopedWatchingSettings = {
 	'docs website layout: styles': {
 		globsToWatch: docsWebsiteLayoutStylesSourceGlobsToWatch,
 		actionToTake: toCompileDocsSiteLayoutStyles,
+		shouldTakeActionOnConstuction: true,
 	},
 	'library: styles': {
 		globsToWatch: libraryStylesSourceGlobsToWatch,
 		actionToTake: toCompileLibraryStyles,
+		shouldTakeActionOnConstuction: true,
 	},
 	'library: media': {
 		globsToWatch: libraryMediaSourceGlobsToWatch,
 		actionToTake: toCopyLibraryMediaFiles,
+		shouldTakeActionOnConstuction: true,
 	},
 };
 
@@ -217,7 +220,7 @@ gulp.task('distribution: copy media', toCopyLibraryMediaFiles);
 gulp.task('distribution: compile styles', toCompileLibraryStyles);
 gulp.task('distribution: build using webpack', toCompileUsingWebpack);
 
-gulp.task('distribution-entry-task', (thisTaskDone) => {
+gulp.task('distribution: entry task', (thisTaskDone) => {
 	process.env.NODE_ENV = 'production';
 	runTasksSequentially(
 		'distribution: delete old distribution',
