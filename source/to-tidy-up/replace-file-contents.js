@@ -4,9 +4,9 @@ const fileSystem = require('fs');
 const pathTool = require('path');
 const chalk = require('chalk');
 
-module.exports = function modifyNodeModuleFilesAndMakeBackups(originalFiles = [], options) {
+module.exports = function modifyFilesAndMakeBackupsBeforeThat(originalFiles = [], options) {
 	function defaultActionOnReplacingFileContents(originalFileAbsolutePath, backupFileAbsolutePath) {
-		console.log(`\n>>> ${
+		console.log(`\n${
 			chalk.bgRed.black(' MODIFYING FILE ')
 		}${
 			chalk.bgGreen.black(' with backup ')
