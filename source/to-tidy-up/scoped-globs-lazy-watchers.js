@@ -69,6 +69,7 @@ function LazyWatcherClass(scopeId, globsToWatch, actionToTake, constructionOptio
 			chalk.white('actionToTake')}"): Must be a function. `));
 	}
 
+	let isConstructingInstance = true;
 	const thisWatcher = this;
 
 	const scopeIdPrintingString = LazyWatcherClass.getPrettyPrintingStringOfScopeId(scopeId);
@@ -83,6 +84,13 @@ function LazyWatcherClass(scopeId, globsToWatch, actionToTake, constructionOptio
 		shouldLogVerbosely = false,
 	} = constructionOptions;
 
+	let {
+		shouldStartWithLessLogs = true,
+	} = constructionOptions;
+
+	if (shouldLogVerbosely) {
+		shouldStartWithLessLogs = false;
+	}
 
 	let actionsAreAllowedInTheFuture = false; // 如果为 false ，文件变动仍然会积累，但注册的动作被按下，不激发。
 
@@ -153,12 +161,17 @@ function LazyWatcherClass(scopeId, globsToWatch, actionToTake, constructionOptio
 
 
 	if (shouldTakeActionOnConstuction) {
-		takeActionOnce(true);
+		takeActionOnce(true, {
+			extraMessage: 'before connecting to any underlying watch engine',
+			shouldNotPrintInvolvedFileList: true,
+		});
 	}
 
 	if (!shouldNotConnectToAnyUnderlyingEngineOnConstruction) {
 		connectToUnderlyingWatchEngine(underlyingWatchEngineIdToUse);
 	}
+
+	isConstructingInstance = false;
 
 
 	function toNormalizeGlobs(rawGlobs, toNormalizeOneGlob) {
@@ -224,13 +237,17 @@ function LazyWatcherClass(scopeId, globsToWatch, actionToTake, constructionOptio
 			events
 		);
 
-		console.log(`\n\n${
+		if (!isConstructingInstance || !shouldStartWithLessLogs) {
+			console.log('');
+		}
+
+		console.log(`${
 			chalk.bgGreen.black(' Connected Watch Engine ')
 		}${
 			chalk.bgMagenta.black(` ${currentUnderlyingWatchEngineId} `)
 		}${
 			scopeIdPrintingString
-		}`);
+		}\nWatching glob(s):`);
 
 		LazyWatcherClass.logGlobsAsAList(normalizedGlobs);
 
@@ -275,13 +292,17 @@ function LazyWatcherClass(scopeId, globsToWatch, actionToTake, constructionOptio
 		}
 
 		actionsAreAllowedInTheFuture = true;
-		console.log(`${
-			chalk.bgBlue.black(' Action Enabled ')
-		} on scope ${scopeIdPrintingString}.`);
+		if (!isConstructingInstance || !shouldStartWithLessLogs) {
+			console.log(`${
+				chalk.bgBlue.black(' Action Enabled ')
+			} on scope ${scopeIdPrintingString}.`);
 
-		console.log(`${
-			chalk.bgGreen.black(' Watching Globs ')
-		} on scope ${scopeIdPrintingString}...`);
+			if (shouldLogVerbosely) {
+				console.log(`${
+					chalk.bgGreen.black(' Watching Globs ')
+				} on scope ${scopeIdPrintingString}...`);
+			}
+		}
 	}
 
 	function _startTimerForDelayedAction() {
@@ -376,9 +397,11 @@ function LazyWatcherClass(scopeId, globsToWatch, actionToTake, constructionOptio
 		if (!actionIsOnGoing) {
 			_startTimerForDelayedAction();
 
-			console.log(`${
-				chalk.bgGreen.black(' Watching Globs ')
-			} on scope ${scopeIdPrintingString}...`);
+			if (shouldLogVerbosely) {
+				console.log(`${
+					chalk.bgGreen.black(' Watching Globs ')
+				} on scope ${scopeIdPrintingString}...`);
+			}
 		}
 	}
 
@@ -386,7 +409,7 @@ function LazyWatcherClass(scopeId, globsToWatch, actionToTake, constructionOptio
 		_onActionFinished('via callback');
 	}
 
-	function takeActionOnce(isForcedToTakeAction) {
+	function takeActionOnce(isForcedToTakeAction, options) {
 		isForcedToTakeAction = !!isForcedToTakeAction;
 
 		// console.log(
@@ -431,7 +454,9 @@ function LazyWatcherClass(scopeId, globsToWatch, actionToTake, constructionOptio
 			fileRecords: changesWeAreDealingWith,
 		};
 
-		LazyWatcherClass.logABatchOfInvolvedFilesForScope(scopeId, detailsOfThisBatch);
+		if (!isConstructingInstance || !shouldStartWithLessLogs) {
+			LazyWatcherClass.logABatchOfInvolvedFilesForScope(scopeId, detailsOfThisBatch, options);
+		}
 
 		const returnedValue = actionToTake(actionFinishedCallback, detailsOfThisBatch);
 
@@ -483,19 +508,26 @@ LazyWatcherClass.logInvolvedFileRecordsAsAList = (fileRecords) => {
 	console.log(listString);
 };
 
-LazyWatcherClass.logABatchOfInvolvedFilesForScope = (scopeId, detailsOfThisBatch) => {
+LazyWatcherClass.logABatchOfInvolvedFilesForScope = (scopeId, detailsOfThisBatch, options = {}) => {
+	const {
+		extraMessage,
+		shouldNotPrintInvolvedFileList,
+	} = options;
+
 	const labelString = detailsOfThisBatch.isForcedToTakeAction ?
 		chalk.bgYellow.black(' FORCED to Take Action ') :
 		chalk.bgGreen.black(' Taking Action ');
-	console.log(`\n${
-		chalk.gray(new Date(detailsOfThisBatch.timestamp).toLocaleString())
-	}\n${labelString} on scope ${
-		LazyWatcherClass.getPrettyPrintingStringOfScopeId(scopeId)
-	}...`);
 
-	console.log('    Involved file(s) in this batch:');
-	LazyWatcherClass.logInvolvedFileRecordsAsAList(detailsOfThisBatch.fileRecords);
-	console.log('');
+	console.log(`\n${
+		chalk.gray(formatTimestamp(detailsOfThisBatch.timestamp))
+	} ${labelString} on scope ${
+		LazyWatcherClass.getPrettyPrintingStringOfScopeId(scopeId)
+	}${extraMessage ? `\n${' '.repeat(9)}${extraMessage}` : ''}...`);
+
+	if (!shouldNotPrintInvolvedFileList) {
+		console.log(`${' '.repeat(13)}Involved file(s) in this batch:`);
+		LazyWatcherClass.logInvolvedFileRecordsAsAList(detailsOfThisBatch.fileRecords);
+	}
 };
 
 LazyWatcherClass.getLoggingTermAndStyleForAnEvent = (typeOfTheChange) => {
