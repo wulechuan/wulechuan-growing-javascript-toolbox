@@ -242,12 +242,12 @@ function LazyWatcherClass(scopeId, globsToWatch, actionToTake, constructionOptio
 		}
 
 		console.log(`${
-			chalk.bgGreen.black(' Connected Watch Engine ')
+			chalk.bgBlue.black(' Connected Watch Engine ')
 		}${
-			chalk.bgMagenta.black(` ${currentUnderlyingWatchEngineId} `)
+			chalk.bgGreen.black(` ${currentUnderlyingWatchEngineId} `)
 		}${
 			scopeIdPrintingString
-		}\nWatching glob(s):`);
+		} ${chalk.gray('~')}\nWatching glob(s):`);
 
 		LazyWatcherClass.logGlobsAsAList(normalizedGlobs);
 
@@ -480,7 +480,7 @@ LazyWatcherClass.defaultMethodToNormalizeOneGlob = rawGlob => rawGlob;
 
 LazyWatcherClass.getPrettyPrintingStringOfScopeId = (scopeId) => {
 	const foldingChar = consoleDoesSupportColors ? ' ' : '"';
-	return chalk.bgWhite.black(`${foldingChar}${scopeId}${foldingChar}`);
+	return chalk.bgYellow.black(`${foldingChar}${scopeId}${foldingChar}`);
 };
 
 LazyWatcherClass.logGlobsAsAList = (globs, indentation = 4) => {
