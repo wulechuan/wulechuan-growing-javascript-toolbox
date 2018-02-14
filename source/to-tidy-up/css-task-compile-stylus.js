@@ -4,7 +4,7 @@ const compileStylus = require('gulp-stylus');
 const pump = require('pump');
 
 const printInfoAboutTheCompletionOfTask = require('../utils/print-one-task-done');
-const printGulpErrorBeautifully = require('../utils/gulp-print-an-error-of-stylus');
+const printGulpErrorBeautifully = require('../utils/gulp-print-an-error-beautifully');
 
 module.exports = function createTaskForCompilingStylusGlobs(entryStylusGlobs, options) {
 	const {

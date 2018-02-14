@@ -4,7 +4,7 @@ const uglifyJavascript = require('gulp-uglify');
 const pump = require('pump');
 
 const printInfoAboutTheCompletionOfTask = require('../utils/print-one-task-done');
-const printGulpUglifyJsErrorBeautifully = require('../utils/gulp-print-an-error-of-uglify-js');
+const printGulpUglifyJsErrorBeautifully = require('../utils/gulp-print-an-error-beautifully');
 
 module.exports = function createTaskBodyForCompilingJS(sourceGlobsOfJavascript, options) {
 	const {

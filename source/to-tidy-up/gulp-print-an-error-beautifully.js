@@ -11,15 +11,33 @@ const longLineWidth  = 51;
 const shortLineWidth = 24;
 let headingAndEndingLinesWidth = longLineWidth;
 
-const wulechuanGulpErrorPrinter = {
-	printErrorTheSimpleWay,
-	printErrorTheComplexWay,
+
+module.exports = function printGulpPluginErrorBeautifully(error, basePathToShortenPrintedFilePaths) {
+	const errorParser = choosePluginErrorParseAccordingToInvolvedPluginName(error.name);
+
+	if (typeof errorParser === 'function') {
+
+		const parsedStructure = errorParser(error);
+		if (parsedStructure) {
+			printErrorTheComplexWay(error.pluginß, parsedStructure, basePathToShortenPrintedFilePaths);
+			return;
+		}
+	}
+
+	printErrorTheSimpleWay(error);
 };
 
-module.exports = wulechuanGulpErrorPrinter;
 
+function choosePluginErrorParseAccordingToInvolvedPluginName(pluginName) {
+	switch (pluginName) {
+		case 'gulp-uglify':
+			return require('./gulp-print-an-error-of-uglify-js');
+		case 'gulp-stylus':
+			return require('./gulp-print-an-error-of-stylus');
+	}
 
-
+	return null;
+}
 
 function parseStacksStringIntoStacksArrayTheDefaultWay(stacksString) {
 	return stacksString.split('    at ');
@@ -222,14 +240,14 @@ function printErrorTheSimpleWay(error) {
 	printErrorEndingInfo(error.plugin, error.name);
 }
 
-function printErrorTheComplexWay(parsedStructure, basePathToShortenPrintedFilePaths, rawError) {
+function printErrorTheComplexWay(involvedGulpPluginName, parsedStructure, basePathToShortenPrintedFilePaths, rawError) {
 	if (!parsedStructure || typeof parsedStructure !== 'object') {
 		printErrorTheSimpleWay(rawError);
 		return;
 	}
 
 	printErrorAbstractInfo(
-		parsedStructure.involvedGulpPluginName,
+		involvedGulpPluginName,
 		parsedStructure.errorType
 	);
 

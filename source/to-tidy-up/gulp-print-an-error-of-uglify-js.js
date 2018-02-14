@@ -1,16 +1,11 @@
-const wulechuanGulpErrorPrinter = require('../utils/gulp-print-an-error-beautifully');
-// const printObjectDetails = require('../utils/print-javascript-object-details'); // eslint-disable-line no-unused-vars
-
-module.exports = function beautifullyPrintUglifyJsError(error, basePathToShortenPrintedFilePaths) {
+module.exports = function beautifullyPrintUglifyJsError(error) {
 	if (typeof error !== 'object') {
-		wulechuanGulpErrorPrinter.printErrorTheSimpleWay(error);
-		return;
+		return null;
 	}
 
 	const { cause } = error;
 	if (typeof cause !== 'object') {
-		wulechuanGulpErrorPrinter.printErrorTheSimpleWay(error);
-		return;
+		return null;
 	}
 
 	const stacksString = error.stack;
@@ -20,24 +15,17 @@ module.exports = function beautifullyPrintUglifyJsError(error, basePathToShorten
 		[ stackUsefulPart ] = stacksString.split('\n    at ');
 	}
 
-	wulechuanGulpErrorPrinter.printErrorTheComplexWay(
-		{
-			involvedGulpPluginName: error.plugin || 'gulp-uglify',
-			errorType: `${error.name}:${cause.name}`,
+	return {
+		errorType: `${error.name}:${cause.name}`,
 
-			stackTopItem: {
-				path: error.fileName,
-				lineNumber: cause.line,
-				columnNumber: cause.col,
-				involvedSnippet: null,
-				conclusionMessage: cause.message,
-			},
-
-			deeperStacks: stackUsefulPart,
+		stackTopItem: {
+			path: error.fileName,
+			lineNumber: cause.line,
+			columnNumber: cause.col,
+			involvedSnippet: null,
+			conclusionMessage: cause.message,
 		},
 
-		basePathToShortenPrintedFilePaths,
-
-		error
-	);
+		deeperStacks: stackUsefulPart,
+	};
 };

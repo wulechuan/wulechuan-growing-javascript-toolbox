@@ -1,6 +1,3 @@
-const wulechuanGulpErrorPrinter = require('../utils/gulp-print-an-error-beautifully');
-const printObjectDetails = require('../utils/print-javascript-object-details'); // eslint-disable-line no-unused-vars
-
 // see also: https://github.com/gulpjs/plugin-error
 // see also: https://github.com/gulpjs/plugin-error/blob/master/index.d.ts
 // gulpErrorInterface = {
@@ -19,10 +16,9 @@ const printObjectDetails = require('../utils/print-javascript-object-details'); 
 // 	toString: Function,
 // };
 
-module.exports = function beautifullyPrintStylusError(error, basePathToShortenPrintedFilePaths) {
+module.exports = function beautifullyPrintStylusError(error) {
 	if (typeof error !== 'object') {
-		wulechuanGulpErrorPrinter.printErrorTheSimpleWay(error);
-		return;
+		return null;
 	}
 
 	const { message } = error;
@@ -32,26 +28,17 @@ module.exports = function beautifullyPrintStylusError(error, basePathToShortenPr
 	const stacks = restPartOfMessage.split('    at ');
 	const [ snippetPlusRawMessageOfTopMostStackItem ] = stacks.splice(0, 1);
 
-	printObjectDetails(stacks);
+	return {
+		errorType: error.name,
 
-	wulechuanGulpErrorPrinter.printErrorTheComplexWay(
-		{
-			involvedGulpPluginName: error.plugin || 'gulp-stylus',
-			errorType: error.name,
-
-			stackTopItem: {
-				path:         error.filename,
-				lineNumber:   error.lineno,
-				columnNumber: error.column,
-				involvedSnippet: snippetPlusRawMessageOfTopMostStackItem,
-				conclusionMessage: null,
-			},
-
-			deeperStacks: stacks,
+		stackTopItem: {
+			path:         error.filename,
+			lineNumber:   error.lineno,
+			columnNumber: error.column,
+			involvedSnippet: snippetPlusRawMessageOfTopMostStackItem,
+			conclusionMessage: null,
 		},
 
-		basePathToShortenPrintedFilePaths,
-
-		error
-	);
+		deeperStacks: stacks,
+	};
 };
