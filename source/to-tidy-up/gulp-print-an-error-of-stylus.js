@@ -16,7 +16,7 @@
 // 	toString: Function,
 // };
 
-module.exports = function beautifullyPrintStylusError(error) {
+module.exports = function parseGulpStylusPluginError(error) {
 	if (typeof error !== 'object') {
 		return null;
 	}

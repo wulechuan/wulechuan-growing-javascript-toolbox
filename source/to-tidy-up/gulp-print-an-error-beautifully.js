@@ -13,13 +13,12 @@ let headingAndEndingLinesWidth = longLineWidth;
 
 
 module.exports = function printGulpPluginErrorBeautifully(error, basePathToShortenPrintedFilePaths) {
-	const errorParser = choosePluginErrorParseAccordingToInvolvedPluginName(error.name);
-
+	const errorParser = choosePluginErrorParseAccordingToInvolvedPluginName(error.plugin);
 	if (typeof errorParser === 'function') {
 
 		const parsedStructure = errorParser(error);
 		if (parsedStructure) {
-			printErrorTheComplexWay(error.pluginß, parsedStructure, basePathToShortenPrintedFilePaths);
+			printErrorTheComplexWay(error.plugin, parsedStructure, basePathToShortenPrintedFilePaths);
 			return;
 		}
 	}
@@ -55,7 +54,7 @@ function printShortLine() {
 }
 
 function printErrorAbstractInfo(involvedPluginName, errorTypeString) {
-	headingAndEndingLinesWidth = '12:34:56 '.length + involvedPluginName.length + 2 + errorTypeString.length + 2;
+	headingAndEndingLinesWidth = 'HH:mm:ss '.length + involvedPluginName.length + 2 + errorTypeString.length + 2;
 
 	printLine(headingAndEndingLinesWidth, 'red');
 
@@ -169,7 +168,7 @@ function parseAndPrintDetailOfTopMostStack(involvedSnippetPlusRawErrorMessage) {
 	}\n${
 		' '.repeat(gutterWidth)
 	}${
-		chalk.gray(`${'~'.repeat(gulpArrowLine.length - gutterWidth - '\n'.length - '^'.length)}${chalk.red('▲')}`)
+		chalk.red(`${'~'.repeat(gulpArrowLine.length - gutterWidth - '\n'.length - '^'.length)}${chalk.red('╳')}`) // ▲
 	}${
 		snippetPart2
 	}`);
@@ -232,24 +231,18 @@ function printAllDeeperStackRecords(stacks, basePathToShortenPrintedFilePaths) {
 
 function printErrorTheSimpleWay(error) {
 	printErrorAbstractInfo(error.plugin, error.name);
+
 	if (typeof error.toString === 'function') {
 		console.log(error.toString());
 	} else {
 		console.log(error);
 	}
+
 	printErrorEndingInfo(error.plugin, error.name);
 }
 
-function printErrorTheComplexWay(involvedGulpPluginName, parsedStructure, basePathToShortenPrintedFilePaths, rawError) {
-	if (!parsedStructure || typeof parsedStructure !== 'object') {
-		printErrorTheSimpleWay(rawError);
-		return;
-	}
-
-	printErrorAbstractInfo(
-		involvedGulpPluginName,
-		parsedStructure.errorType
-	);
+function printErrorTheComplexWay(involvedGulpPluginName, parsedStructure, basePathToShortenPrintedFilePaths) {
+	printErrorAbstractInfo(involvedGulpPluginName, parsedStructure.errorType);
 
 	const { stackTopItem } = parsedStructure;
 
@@ -277,8 +270,5 @@ function printErrorTheComplexWay(involvedGulpPluginName, parsedStructure, basePa
 		printAllDeeperStackRecords(deeperStacks, basePathToShortenPrintedFilePaths);
 	}
 
-	printErrorEndingInfo(
-		parsedStructure.involvedGulpPluginName,
-		parsedStructure.errorType
-	);
+	printErrorEndingInfo(involvedGulpPluginName, parsedStructure.errorType);
 }

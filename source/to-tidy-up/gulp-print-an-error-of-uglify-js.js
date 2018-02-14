@@ -1,4 +1,4 @@
-module.exports = function beautifullyPrintUglifyJsError(error) {
+module.exports = function parseGulpUglifyJsPluginError(error) {
 	if (typeof error !== 'object') {
 		return null;
 	}
