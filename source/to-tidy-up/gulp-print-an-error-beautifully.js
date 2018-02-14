@@ -1,43 +1,73 @@
+// see also: https://github.com/gulpjs/plugin-error
+// see also: https://github.com/gulpjs/plugin-error/blob/master/index.d.ts
+
 const pathTool = require('path');
 
 const chalk = require('chalk');
 const moment = require('moment');
+const printObjectDetails = require('../utils/print-javascript-object-details'); // eslint-disable-line no-unused-vars
 
-// see also: https://github.com/gulpjs/plugin-error
-// see also: https://github.com/gulpjs/plugin-error/blob/master/index.d.ts
-// gulpErrorInterface = {
-// 	lineno: Number, // Integer
-// 	column: Number, // Integer
-// 	filename: String,
-// 	stylusStack: String, // plugin sepcific
-// 	message: String,
-// 	name: String, // 'TypeError' | 'Error' | ...
-// 	stack: String, // seems to be error.name + error.message + error.<plugin>Stack + <gulp running stack (if any)>
-// 	plugin: String, // 'gulp-stylus' | 'gulp-less' etc.
-// 	showProperties: Boolean,
-// 	shwoStack: Boolean,
-// 	_messageWithDefails: Function,
-// 	_messageDetails: Function,
-// 	toString: Function,
-// };
+const longLineWidth  = 51;
+const shortLineWidth = 24;
+let headingAndEndingLinesWidth = longLineWidth;
 
-const longLineWidth = 51;
+const wulechuanGulpErrorPrinter = {
+	printErrorTheSimpleWay,
+	printErrorTheComplexWay,
+};
 
-const dividingLineLongRed  = chalk.red ('─'.repeat(longLineWidth));
-const dividingLineShort    = chalk.gray('─'.repeat(24));
+module.exports = wulechuanGulpErrorPrinter;
 
 
 
-function printErrorAbstractInfoBlock(involvedPluginName, errorTypeString) {
+
+function parseStacksStringIntoStacksArrayTheDefaultWay(stacksString) {
+	return stacksString.split('    at ');
+}
+
+
+
+
+function printLine(width, color) {
+	console.log(chalk[color || 'gray']('─'.repeat(width || longLineWidth)));
+}
+
+function printShortLine() {
+	printLine(shortLineWidth);
+}
+
+function printErrorAbstractInfo(involvedPluginName, errorTypeString) {
+	headingAndEndingLinesWidth = '12:34:56 '.length + involvedPluginName.length + 2 + errorTypeString.length + 2;
+
+	printLine(headingAndEndingLinesWidth, 'red');
+
 	console.log(`${
 		chalk.gray(moment().format('HH:mm:ss'))
 	} ${
 		chalk.bgWhite.black(` ${involvedPluginName} `)
 	}${
 		chalk.bgMagenta.black(` ${errorTypeString} `)
-	}`);
+	} ${chalk.gray('╳')}`);
+
+	printLine(headingAndEndingLinesWidth, 'red');
+
+	console.log('');
 }
 
+function printErrorEndingInfo(involvedPluginName, errorTypeString) {
+	printLine(headingAndEndingLinesWidth, 'red');
+	console.log(chalk.red(`  End of  ${chalk.white(involvedPluginName)}  ${errorTypeString}`));
+	printLine(headingAndEndingLinesWidth, 'red');
+	console.log('\n'.repeat(0));
+}
+
+function printConclusionMessageIfAny(errorMessage) {
+	if (errorMessage) {
+		console.log(`${chalk.bgYellow.black(' Error Message ')} ${
+			chalk.yellow(errorMessage)
+		}`);
+	}
+}
 
 function printHeaderForOneItemInStack(fileFullPath, lineNumber, columnNumber, basePathToShortenPrintedFilePaths) {
 	if (typeof basePathToShortenPrintedFilePaths !== 'string') {
@@ -51,7 +81,7 @@ function printHeaderForOneItemInStack(fileFullPath, lineNumber, columnNumber, ba
 	// Besides, unfortunetly, in Microsoft VSCode, so far the version 1.20.0,
 	// the file path must be short enough, or the console being wide enough,
 	// so that the file path displays with a single line, can the said file path be clicked.
-	console.log(chalk.gray(fileFullPath));
+	console.log(`Clickable linkage:\n${chalk.gray(fileFullPath)}\n`);
 
 
 
@@ -80,14 +110,14 @@ function printHeaderForOneItemInStack(fileFullPath, lineNumber, columnNumber, ba
 		chalk.green(columnNumber)
 	}`);
 
-	console.log(`${dividingLineShort}`);
+	printShortLine();
 }
 
 
-function parseAndPrintDetailOfTopMostStack(fileFullPath, lineNumber, columnNumber, involvedSnippetPlusRawErrorMessage, basePathToShortenPrintedFilePaths) {
-	console.log(`${chalk.bgBlue.black(' Statement in top most stack ')} >\n`);
-
-	printHeaderForOneItemInStack(fileFullPath, lineNumber, columnNumber, basePathToShortenPrintedFilePaths);
+function parseAndPrintDetailOfTopMostStack(involvedSnippetPlusRawErrorMessage) {
+	if (! involvedSnippetPlusRawErrorMessage || typeof involvedSnippetPlusRawErrorMessage !== 'string') {
+		return;
+	}
 
 	const allLineGutters = involvedSnippetPlusRawErrorMessage.match(/\n\s*\d+\|/g);
 	const lastGutter = allLineGutters[allLineGutters.length - 1];
@@ -100,8 +130,8 @@ function parseAndPrintDetailOfTopMostStack(fileFullPath, lineNumber, columnNumbe
 
 	const rawErrorMessageOfTopMostStack = involvedSnippetPlusRawErrorMessage.slice(posOfRawErrorMessageOfLastFile);
 
-	const matchingResultOfArrowLine = involvedSnippetPlusRawErrorMessage.match(/(\n\-{5,}\^)\n/);
-	const [ , gulpArrowLine ] = matchingResultOfArrowLine;
+	const matchingResultOfArrowLine = involvedSnippetPlusRawErrorMessage.match(/(\n-{5,}\^)\n/);
+	const [ , gulpArrowLine] = matchingResultOfArrowLine;
 	const posOfGulpArrowLine = involvedSnippetPlusRawErrorMessage.indexOf(gulpArrowLine);
 
 	const snippetPart1IncludingHighlightedLine = involvedSnippetPlusRawErrorMessage.slice(0, posOfGulpArrowLine);
@@ -126,15 +156,17 @@ function parseAndPrintDetailOfTopMostStack(fileFullPath, lineNumber, columnNumbe
 		snippetPart2
 	}`);
 
-	console.log(`${chalk.bgYellow.black(' Error Message ')} ${
-		chalk.yellow(rawErrorMessageOfTopMostStack)
-	}`);
+	printConclusionMessageIfAny(rawErrorMessageOfTopMostStack);
 }
 
 
-function parseAndPrintDeeperStacksIfAny(stacks, basePathToShortenPrintedFilePaths) {
+function printAllDeeperStackRecords(stacks, basePathToShortenPrintedFilePaths) {
+	if (! Array.isArray(stacks)) {
+		return;
+	}
+
 	if (stacks.length > 0) {
-		console.log(`\n\n${chalk.bgBlue.black(' ...more statements in deeper stack ')} >\n`);
+		console.log(`\n\n${chalk.bgBlue.black(' ...more info in deeper stack ')} ${chalk.gray('>')}\n`);
 	}
 
 	stacks.forEach(stack => {
@@ -178,41 +210,57 @@ function parseAndPrintDeeperStacksIfAny(stacks, basePathToShortenPrintedFilePath
 
 
 
-module.exports = function beautifullyPrintStylusError(error, basePathToShortenPrintedFilePaths) {
-	const { message } = error;
-
-	const posOfRestPart =  message.indexOf('\n');
-	const restPartOfMessage = message.slice(posOfRestPart);
-	const stacks = restPartOfMessage.split('    at ');
-	const [ snippetPlusRawMessageOfTopMostStackItem ] = stacks.splice(0, 1);
 
 
+function printErrorTheSimpleWay(error) {
+	printErrorAbstractInfo(error.plugin, error.name);
+	if (typeof error.toString === 'function') {
+		console.log(error.toString());
+	} else {
+		console.log(error);
+	}
+	printErrorEndingInfo(error.plugin, error.name);
+}
 
-	console.log('\n'.repeat(5));
-	console.log(dividingLineLongRed);
-	printErrorAbstractInfoBlock(error.plugin, error.name);
-	console.log(dividingLineLongRed);
+function printErrorTheComplexWay(parsedStructure, basePathToShortenPrintedFilePaths, rawError) {
+	if (!parsedStructure || typeof parsedStructure !== 'object') {
+		printErrorTheSimpleWay(rawError);
+		return;
+	}
 
-	console.log('');
-
-
-
-	parseAndPrintDetailOfTopMostStack(
-		error.filename,
-		error.lineno,
-		error.column,
-		snippetPlusRawMessageOfTopMostStackItem,
-		basePathToShortenPrintedFilePaths
+	printErrorAbstractInfo(
+		parsedStructure.involvedGulpPluginName,
+		parsedStructure.errorType
 	);
 
+	const { stackTopItem } = parsedStructure;
 
+	if (stackTopItem && typeof stackTopItem === 'object') {
+		console.log(`${chalk.bgBlue.black(' Statement in top most stack ')} ${chalk.gray('>')}\n`);
 
-	parseAndPrintDeeperStacksIfAny(stacks, basePathToShortenPrintedFilePaths);
+		printHeaderForOneItemInStack(
+			stackTopItem.path,
+			stackTopItem.lineNumber,
+			stackTopItem.columnNumber,
+			basePathToShortenPrintedFilePaths
+		);
 
+		parseAndPrintDetailOfTopMostStack(stackTopItem.involvedSnippet);
 
+		printConclusionMessageIfAny(stackTopItem.conclusionMessage);
+	}
 
-	console.log(dividingLineLongRed);
-	console.log(chalk.red(`End of ${chalk.white(error.plugin)} ${error.name}`));
-	console.log(dividingLineLongRed);
-	console.log('\n'.repeat(5));
-};
+	let { deeperStacks } = parsedStructure;
+	if (deeperStacks) {
+		if (typeof deeperStacks === 'string') {
+			deeperStacks = parseStacksStringIntoStacksArrayTheDefaultWay(deeperStacks);
+		}
+
+		printAllDeeperStackRecords(deeperStacks, basePathToShortenPrintedFilePaths);
+	}
+
+	printErrorEndingInfo(
+		parsedStructure.involvedGulpPluginName,
+		parsedStructure.errorType
+	);
+}

@@ -3,8 +3,8 @@ const renameFile = require('gulp-rename');
 const compileStylus = require('gulp-stylus');
 const pump = require('pump');
 
-const printInfoAboutTheCompletionOfTask = require('../utils/print-one-thing-done');
-const printGulpErrorBeautifully = require('../utils/print-gulp-error-beautifully');
+const printInfoAboutTheCompletionOfTask = require('../utils/print-one-task-done');
+const printGulpErrorBeautifully = require('../utils/gulp-print-an-error-of-stylus');
 
 module.exports = function createTaskForCompilingStylusGlobs(entryStylusGlobs, options) {
 	const {
@@ -43,7 +43,7 @@ module.exports = function createTaskForCompilingStylusGlobs(entryStylusGlobs, op
 				printGulpErrorBeautifully(error, sourceFileBasePath);
 			}
 
-			printInfoAboutTheCompletionOfTask('Compiling Stylus into CSS');
+			printInfoAboutTheCompletionOfTask('Compiling Stylus into CSS', !!error);
 			thisTaskDoneCallback();
 		});
 	};
