@@ -27,10 +27,11 @@ module.exports = function createTaskForCompilingStylusGlobs(entryStylusGlobs, op
 		taskSteps.push(gulp.dest(compiledCSSOutputFolder));
 
 		if (! shouldNotGenerateMinifiedVersions) {
-			compilationOptions.compress = true;
+			const compilationOptions2 = Object.assign({}, compilationOptions);
+			compilationOptions2.compress = true;
 
 			taskSteps.push(gulp.src(entryStylusGlobs));
-			taskSteps.push(compileStylus(compilationOptions));
+			taskSteps.push(compileStylus(compilationOptions2));
 			taskSteps.push(renameFile({
 				base: compiledCSSFileBaseName,
 				suffix: '.min',
